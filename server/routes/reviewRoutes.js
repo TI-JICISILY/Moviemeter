@@ -22,15 +22,15 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// Get reviews by movie ID
-router.get('/:movieId', async (req, res) => {
-  const reviews = await Review.find({ movieId: req.params.movieId });
-  res.json(reviews);
-});
-
 // Get reviews by logged-in user
 router.get('/user', auth, async (req, res) => {
   const reviews = await Review.find({ userId: req.user.id });
+  res.json(reviews);
+});
+
+// Get reviews by movie ID
+router.get('/:movieId', async (req, res) => {
+  const reviews = await Review.find({ movieId: req.params.movieId });
   res.json(reviews);
 });
 

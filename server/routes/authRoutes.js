@@ -44,4 +44,54 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+// Update profile picture
+router.put('/profile/picture', async (req, res) => {
+  try {
+    const token = req.headers['authorization'];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { profilePicture } = req.body;
+
+    // Validate base64 image (basic validation)
+    if (profilePicture && !profilePicture.startsWith('data:image/')) {
+      return res.status(400).json({ error: 'Invalid image format' });
+    }
+
+    // Limit image size (base64 string length check - roughly 1MB limit)
+    if (profilePicture && profilePicture.length > 1400000) {
+      return res.status(400).json({ error: 'Image too large. Please use an image under 1MB' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      decoded.id,
+      { profilePicture },
+      { new: true }
+    ).select('-password');
+
+    res.json(user);
+  } catch (err) {
+    console.error('Profile picture update error:', err);
+    res.status(500).json({ error: 'Failed to update profile picture' });
+  }
+});
+
+// Update profile info
+router.put('/profile', async (req, res) => {
+  try {
+    const token = req.headers['authorization'];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { name } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      decoded.id,
+      { name },
+      { new: true }
+    ).select('-password');
+
+    res.json(user);
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 export default router;
