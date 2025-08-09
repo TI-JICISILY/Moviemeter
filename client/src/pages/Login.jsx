@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import http from '../api/http';
 import './Auth.css';
 
 const Login = () => {
@@ -8,7 +8,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const API = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,7 +20,7 @@ const Login = () => {
     setError('');
     
     try {
-      const res = await axios.post(`${API}/api/auth/login`, form);
+      const res = await http.post('/api/auth/login', form);
       localStorage.setItem('token', res.data.token);
       navigate('/');
     } catch (err) {

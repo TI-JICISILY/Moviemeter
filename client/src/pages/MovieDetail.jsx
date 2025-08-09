@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import http from '../api/http';
 import './MovieDetail.css';
 
 // Tell Profile to refresh itself
@@ -17,8 +18,6 @@ const MovieDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [userToken, setUserToken] = useState(localStorage.getItem('token'));
 
-  const API = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-
   const fetchMovie = async () => {
     try {
       const res = await axios.get(`https://www.omdbapi.com/?i=${id}&apikey=6e52756d`);
@@ -31,7 +30,7 @@ const MovieDetail = () => {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(`${API}/api/reviews/${id}`);
+      const res = await http.get(`/api/reviews/${id}`);
       setReviews(res.data || []);
     } catch (err) {
       console.error('Error fetching reviews:', err);
@@ -42,9 +41,7 @@ const MovieDetail = () => {
   const fetchUser = async () => {
     if (!userToken) return;
     try {
-      const res = await axios.get(`${API}/api/auth/profile`, {
-        headers: { Authorization: userToken },
-      });
+      const res = await http.get('/api/auth/profile');
       setUserId(res.data?._id);
     } catch (err) {
       console.error('Error fetching user:', err);
@@ -118,12 +115,12 @@ const MovieDetail = () => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/api/reviews`, {
+      await http.post('/api/reviews', {
         movieId: id,
         movieTitle: movie?.Title || '',
         rating: form.rating,
         comment: form.comment.trim(),
-      }, { headers: { Authorization: userToken } });
+      });
 
       setForm({ rating: 0, comment: '' });
       await fetchReviews();
@@ -151,10 +148,10 @@ const MovieDetail = () => {
     }
 
     try {
-      await axios.put(`${API}/api/reviews/${review._id}`, {
+      await http.put(`/api/reviews/${review._id}`, {
         comment: updatedComment.trim(),
         rating: rating,
-      }, { headers: { Authorization: userToken } });
+      });
 
       await fetchReviews();
       notifyProfileRefresh();
@@ -169,9 +166,7 @@ const MovieDetail = () => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
 
     try {
-      await axios.delete(`${API}/api/reviews/${reviewId}`, {
-        headers: { Authorization: userToken },
-      });
+      await http.delete(`/api/reviews/${reviewId}`);
 
       await fetchReviews();
       notifyProfileRefresh();

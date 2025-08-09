@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import http from '../api/http';
 import './Profile.css';
 
 const Profile = () => {
@@ -9,7 +9,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [showPictureModal, setShowPictureModal] = useState(false);
-  const API = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
   const token = localStorage.getItem('token');
 
   const fetchUser = useCallback(async () => {
@@ -18,15 +17,13 @@ const Profile = () => {
       return;
     }
     try {
-      const res = await axios.get(`${API}/api/auth/profile`, {
-        headers: { Authorization: token },
-      });
+      const res = await http.get('/api/auth/profile');
       setUser(res.data || {});
     } catch (err) {
       console.error('Error fetching user:', err);
       setUser({});
     }
-  }, [API, token]);
+  }, [token]);
 
   const fetchUserReviews = useCallback(async () => {
     if (!token) {
@@ -34,9 +31,7 @@ const Profile = () => {
       return;
     }
     try {
-      const res = await axios.get(`${API}/api/reviews/user`, {
-        headers: { Authorization: token },
-      });
+      const res = await http.get('/api/reviews/user');
       setReviews(res.data || []);
     } catch (err) {
       console.error('Error fetching reviews:', err);
@@ -44,7 +39,7 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  }, [API, token]);
+  }, [token]);
 
   useEffect(() => {
     fetchUser();
@@ -91,10 +86,8 @@ const Profile = () => {
         const base64 = e.target.result;
         
         try {
-          const response = await axios.put(`${API}/api/auth/profile/picture`, {
+          const response = await http.put('/api/auth/profile/picture', {
             profilePicture: base64
-          }, {
-            headers: { Authorization: token }
           });
 
           setUser(response.data);
@@ -118,10 +111,8 @@ const Profile = () => {
   const removePicture = async () => {
     setUploadingPicture(true);
     try {
-      const response = await axios.put(`${API}/api/auth/profile/picture`, {
+      const response = await http.put('/api/auth/profile/picture', {
         profilePicture: null
-      }, {
-        headers: { Authorization: token }
       });
 
       setUser(response.data);
