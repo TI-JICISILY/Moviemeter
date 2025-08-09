@@ -33,8 +33,15 @@ Set these in your backend hosting platform:
 MONGO_URI = your-mongodb-connection-string
 JWT_SECRET = your-jwt-secret-key
 CLIENT_ORIGIN = https://your-netlify-site.netlify.app
+LOCAL_ORIGIN = http://localhost:3000
 PORT = 5000
+NODE_ENV = production
 ```
+
+**Important:** 
+- `CLIENT_ORIGIN` must match your Netlify URL exactly (https, no trailing slash)
+- `LOCAL_ORIGIN` is optional for local development
+- Make sure there are no typos in your URLs
 
 ### 2. Railway Deployment
 1. Connect GitHub repository
@@ -75,21 +82,47 @@ PORT = 5000
 ## Troubleshooting
 
 ### CORS Errors
-- Check `CLIENT_ORIGIN` environment variable on backend
-- Verify frontend URL in CORS configuration
+**"CORS blocked" in browser console:**
+1. Check `CLIENT_ORIGIN` environment variable on backend matches Netlify URL exactly
+2. Ensure no trailing slash in URLs
+3. Verify backend is redeployed after environment variable changes
+4. Check browser DevTools → Network → Headers for the exact origin being sent
+
+**Test CORS Configuration:**
+```bash
+# Check if your API allows your frontend origin
+curl -H "Origin: https://your-netlify-site.netlify.app" \
+     -H "Access-Control-Request-Method: GET" \
+     -H "Access-Control-Request-Headers: authorization" \
+     -X OPTIONS \
+     https://your-backend.onrender.com/api/auth/profile
+```
 
 ### 404 on Refresh
 - Ensure `_redirects` file exists in `client/public/`
-- Or `netlify.toml` in `client/` folder
+- Or `netlify.toml` in `client/` folder with redirects configuration
 
-### API Not Found
-- Check `REACT_APP_API_BASE` environment variable
-- Verify backend is deployed and running
+### API Not Found / 401 Unauthorized
+- Check `REACT_APP_API_BASE` environment variable on Netlify
+- Verify backend is deployed and accessible at `/health` endpoint
+- Ensure tokens are being sent with requests
 
 ### Build Failures
-- Check Node.js version compatibility
+- Check Node.js version compatibility (use Node 18+ recommended)
 - Verify all dependencies are installed
 - Check for environment-specific issues
+- Clear Netlify cache: Deploys → Trigger deploy → Clear cache and deploy
+
+### Health Check
+**Test your API health:**
+- Visit: `https://your-backend-url.onrender.com/health`
+- Should return: `{"ok": true, "timestamp": "...", "allowedOrigins": [...]}`
+
+### Common Issues
+1. **Wrong URL format**: Use `https://` not `http://` for production
+2. **Trailing slashes**: Remove them from environment variables
+3. **Case sensitivity**: Environment variable names are case-sensitive
+4. **Cache issues**: Clear browser cache and Netlify deploy cache
 
 ## Security Notes
 
