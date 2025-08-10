@@ -56,6 +56,11 @@ app.options('*', cors(corsOptions));
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGO_URI;
+    console.log('🔍 Environment check:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- MONGO_URI exists:', !!mongoURI);
+    console.log('- MONGO_URI length:', mongoURI ? mongoURI.length : 0);
+    
     if (!mongoURI) {
       throw new Error('MONGO_URI is not defined in environment variables');
     }
