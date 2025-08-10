@@ -26,7 +26,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Build an allow-list from env
 const allowList = [
   process.env.CLIENT_ORIGIN,           // Vercel prod
-  'https://moviemeter-l5tx.vercel.app', // Vercel domain
+  'https://moviemeter-y55x.vercel.app', // Vercel domain
+  'https://moviemeter-l5tx.vercel.app', // Vercel domain (backup)
   process.env.LOCAL_ORIGIN || 'http://localhost:3000', // local dev
 ].filter(Boolean);
 

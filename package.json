@@ -12,19 +12,26 @@
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
-  "keywords": ["movie", "review", "react", "nodejs", "mongodb"],
+  "keywords": [
+    "movie",
+    "review",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
   "author": "TI-JICISILY",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.17.0",
-    "concurrently": "^8.2.2"
+    "mongoose": "^8.17.0"
   },
   "devDependencies": {
+    "cypress": "^14.5.4",
     "nodemon": "^3.1.10"
   }
 }

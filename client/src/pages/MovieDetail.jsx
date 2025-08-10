@@ -133,6 +133,7 @@ const MovieDetail = () => {
     }
   };
 
+  // 🔧 UPDATED: include movieId, movieTitle, rating, comment (server requires these)
   const handleEdit = async (review) => {
     if (!userToken) return;
 
@@ -141,23 +142,36 @@ const MovieDetail = () => {
     const updatedRating = prompt('Edit your rating (1-5)', review.rating);
     if (updatedRating == null) return;
 
-    const rating = parseInt(updatedRating);
+    const rating = parseInt(updatedRating, 10);
     if (isNaN(rating) || rating < 1 || rating > 5) {
       alert('Rating must be between 1 and 5');
       return;
     }
 
     try {
-      await http.put(`/api/reviews/${review._id}`, {
+      const payload = {
+        movieId: id,
+        movieTitle: movie?.Title || '',
+        rating,
         comment: updatedComment.trim(),
-        rating: rating,
-      });
+      };
+
+      // Use the review-id route you already had; it now carries required fields
+      await http.put(`/api/reviews/${review._id}`, payload);
+
+      // If your backend updates by movie-id instead, swap to:
+      // await http.put(`/api/reviews/movie/${id}`, payload);
 
       await fetchReviews();
       notifyProfileRefresh();
     } catch (err) {
       console.error('Error updating review:', err);
-      alert('Failed to update review. Please try again.');
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Unknown error occurred';
+      alert(`Failed to update review: ${errorMessage}`);
     }
   };
 
@@ -172,7 +186,8 @@ const MovieDetail = () => {
       notifyProfileRefresh();
     } catch (err) {
       console.error('Error deleting review:', err);
-      alert('Failed to delete review. Please try again.');
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error occurred';
+      alert(`Failed to delete review: ${errorMessage}`);
     }
   };
 
