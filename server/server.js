@@ -5,9 +5,23 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 
+// Load environment variables first
 dotenv.config();
 
 const app = express();
+
+// Security headers middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Body parsing middleware with size limits - MUST come before routes
+app.use(express.json({ limit: '10mb' })); // Increased limit for profile pictures
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Build an allow-list from env
 const allowList = [
@@ -38,12 +52,45 @@ app.use(cors(corsOptions));
 // Helpful: handle OPTIONS preflights early
 app.options('*', cors(corsOptions));
 
-app.use(express.json({ limit: '10mb' })); // Increased limit for profile pictures
+// MongoDB connection with better error handling
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGO_URI;
+    if (!mongoURI) {
+      throw new Error('MONGO_URI is not defined in environment variables');
+    }
+    
+    await mongoose.connect(mongoURI);
+    console.log('✅ MongoDB connected successfully');
+    console.log(`📍 Database: ${mongoose.connection.name}`);
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1); // Exit if database connection fails
+  }
+};
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error(err));
+// MongoDB connection event handlers
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
 
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+});
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 
@@ -53,7 +100,8 @@ app.get('/health', (req, res) => {
     ok: true, 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    allowedOrigins: allowList
+    allowedOrigins: allowList,
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -83,12 +131,36 @@ app.use('*', (req, res) => {
 app.use((error, req, res, next) => {
   console.error('Server Error:', error.message);
   
+  // Payload too large error
+  if (error.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: 'Payload Too Large',
+      message: 'Request body is too large. Please reduce the size of your request.'
+    });
+  }
+  
   // CORS errors
   if (error.message.includes('CORS blocked')) {
     return res.status(403).json({
       error: 'CORS Policy Violation',
       message: error.message,
       origin: req.get('Origin')
+    });
+  }
+  
+  // MongoDB errors
+  if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+    return res.status(500).json({
+      error: 'Database Error',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Database operation failed'
+    });
+  }
+  
+  // Validation errors
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: error.message
     });
   }
   
@@ -100,9 +172,22 @@ app.use((error, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 MovieMeter API running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Allowed origins: ${allowList.join(', ') || 'None configured'}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-});
+
+// Start server only after database connection
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 MovieMeter API running on port ${PORT}`);
+      console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 Allowed origins: ${allowList.join(', ') || 'None configured'}`);
+      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();

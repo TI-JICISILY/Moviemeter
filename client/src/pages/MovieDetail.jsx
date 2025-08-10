@@ -30,7 +30,7 @@ const MovieDetail = () => {
 
   const fetchReviews = async () => {
     try {
-      const res = await http.get(`/api/reviews/${id}`);
+      const res = await http.get(`/api/reviews/movie/${id}`);
       setReviews(res.data || []);
     } catch (err) {
       console.error('Error fetching reviews:', err);
