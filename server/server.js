@@ -25,7 +25,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Build an allow-list from env
 const allowList = [
-  process.env.CLIENT_ORIGIN,           // Netlify prod
+  process.env.CLIENT_ORIGIN,           // Vercel prod
+  'https://moviemeter-l5tx.vercel.app', // Vercel domain
   process.env.LOCAL_ORIGIN || 'http://localhost:3000', // local dev
 ].filter(Boolean);
 
