@@ -58,7 +58,7 @@ const connectDB = async () => {
     const mongoURI = process.env.MONGO_URI;
     console.log('🔍 Environment check:');
     console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('- MONGO_URI exists:', !!mongoURI);
+    console.log('- mongodb+srv://tijijogy90:tiji2025@cluster0.qy5xkxb.mongodb.net/moviemeter?retryWrites=true&w=majority&appName=Cluster0', !!mongoURI);
     console.log('- MONGO_URI length:', mongoURI ? mongoURI.length : 0);
     
     if (!mongoURI) {
