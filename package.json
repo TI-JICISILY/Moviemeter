@@ -1,22 +1,20 @@
 {
   "name": "moviemeter",
   "version": "1.0.0",
-  "description": "MovieMeter - Movie Review Application",
-  "main": "index.js",
+  "description": "A movie review application with React frontend and Node.js backend",
+  "main": "server/server.js",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "node server/server.js",
     "server": "cd server && npm run dev",
     "client": "cd client && npm start",
     "build": "cd client && npm run build",
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
+  "keywords": ["movie", "review", "react", "nodejs", "mongodb"],
+  "author": "TI-JICISILY",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^1.11.0",
-    "react-router-dom": "^7.7.1",
     "concurrently": "^8.2.2"
-  },
-  "keywords": ["movie", "review", "react", "node", "express", "mongodb"],
-  "author": "",
-  "license": "ISC"
+  }
 }
